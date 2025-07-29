@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shoe Customizer</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #shoe-container { margin: 20px; }
+    #controls { margin: 20px; }
+    .color-btn { width: 50px; height: 50px; border: none; cursor: pointer; margin: 5px; }
+    #status { color: red; margin-top: 10px; }
+    #note { margin: 10px; color: blue; }
+  </style>
+</head>
+<body>
+  <h1>Design Your Shoe</h1>
+  <div id="shoe-container">
+    <svg id="shoe" width="300" height="150" viewBox="0 0 300 150" aria-label="Customizable shoe design">
+      <title>Shoe Design</title>
+      <path id="upper" d="M50 100 C100 50, 200 50, 250 100 L200 120 C150 130, 100 130, 50 120 Z" fill="#cccccc"/>
+      <path id="sole" d="M50 120 C100 130, 200 130, 250 120 L250 140 C200 150, 100 150, 50 140 Z" fill="#333333"/>
+      <path id="laces" d="M100 70 H200 M110 80 H190 M120 90 H180" stroke="#ffffff" stroke-width="5"/>
+      <path id="logo" d="M140 60 L150 40 L160 60 Z" fill="yellow" style="display: none;"/>
+    </svg>
+  </div>
+  <div id="controls">
+    <h3>Customize Colors</h3>
+    <label>Upper:</label>
+    <input type="color" id="upper-color" value="#cccccc" aria-label="Upper shoe color">
+    <br><br>
+    <label>Sole:</label>
+    <input type="color" id="sole-color" value="#333333" aria-label="Sole color">
+    <br><br>
+    <label>Laces:</label>
+    <input type="color" id="laces-color" value="#ffffff" aria-label="Laces color">
+    <br><br>
+    <label>Show Logo:</label>
+    <input type="checkbox" id="logo-toggle">
+    <br><br>
+    <button id="save-btn">Save Design</button>
+    <button id="reset-btn">Reset Design</button>
+    <div id="status"></div>
+    <div id="note">
+      Note: To save designs, run this app on a local server (e.g., using 'python -m http.server' or VS Code Live Server).
+    </div>
+  </div>
+
+  <script>
+    // Default colors
+    const defaultColors = {
+      upper: '#cccccc',
+      sole: '#333333',
+      laces: '#ffffff',
+    };
+
+    // Update colors in real-time
+    document.getElementById('upper-color').addEventListener('input', function () {
+      document.getElementById('upper').setAttribute('fill', this.value);
+    });
+    document.getElementById('sole-color').addEventListener('input', function () {
+      document.getElementById('sole').setAttribute('fill', this.value);
+    });
+    document.getElementById('laces-color').addEventListener('input', function () {
+      document.getElementById('laces').setAttribute('stroke', this.value);
+    });
+
+    // Toggle logo visibility
+    document.getElementById('logo-toggle').addEventListener('change', function () {
+      document.getElementById('logo').style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Reset to default colors
+    function resetDesign() {
+      if (confirm('Are you sure you want to reset the design to default colors?')) {
+        document.getElementById('upper-color').value = defaultColors.upper;
+        document.getElementById('sole-color').value = defaultColors.sole;
+        document.getElementById('laces-color').value = defaultColors.laces;
+        document.getElementById('upper').setAttribute('fill', defaultColors.upper);
+        document.getElementById('sole').setAttribute('fill', defaultColors.sole);
+        document.getElementById('laces').setAttribute('stroke', defaultColors.laces);
+        document.getElementById('logo').style.display = 'none';
+        document.getElementById('logo-toggle').checked = false;
+        document.getElementById('status').textContent = 'Design reset to default!';
+        setTimeout(() => (document.getElementById('status').textContent = ''), 2000);
+      }
+    }
+
+    // Save design as PNG
+    function saveDesign() {
+      try {
+        document.getElementById('status').textContent = 'Saving...';
+        const svg = document.getElementById('shoe');
+        const serializer = new XMLSerializer();
+        let svgStr = serializer.serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        canvas.width = 300;
+        canvas.height = 150;
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.onload = function () {
+          ctx.drawImage(img, 0, 0);
+          const link = document.createElement('a');
+          link.download = 'shoe-design.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          document.getElementById('status').textContent = 'Design saved successfully!';
+          setTimeout(() => (document.getElementById('status').textContent = ''), 2000);
+        };
+        img.onerror = function () {
+          document.getElementById('status').textContent =
+            'Error saving design. Try running on a local server.';
+          setTimeout(() => (document.getElementById('status').textContent = ''), 2000);
+        };
+        const encodedSvg = btoa(unescape(encodeURIComponent(svgStr)));
+        img.src = 'data:image/svg+xml;base64,' + encodedSvg;
+      } catch (error) {
+        document.getElementById('status').textContent = 'Error: ' + error.message;
+        setTimeout(() => (document.getElementById('status').textContent = ''), 2000);
+      }
+    }
+
+    // Attach event listeners to buttons
+    document.getElementById('save-btn').addEventListener('click', saveDesign);
+    document.getElementById('reset-btn').addEventListener('click', resetDesign);
+  </script>
+</body>
+</html>
